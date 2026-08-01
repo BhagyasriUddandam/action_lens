@@ -30,6 +30,17 @@ Format: **Date — Mistake — Rule to prevent it.**
   page. Applies to modality too — "RGB dataset" may mean depth-primary (URFD) or
   still images rather than clips (the Roboflow URFD mirrors).
 
+- **2026-07-31 — "Server is blocking us" was actually a dead link.** The HMDB51 Brown
+  URL returned HTML, which looked like user-agent blocking. It wasn't: Brown migrated
+  the lab site off WordPress to GitHub Pages, so the host 301s to the new homepage and
+  the old path 404s. UA/referer spoofing was never going to work. **Rule:** before
+  writing UA-spoofing or scraping workarounds, follow the redirect chain
+  (`curl -sIL`) and check whether the resource still exists. Distinguish
+  301→homepage (dead link) from 403/captcha (actual bot block) — only the latter
+  justifies a workaround. Also: prefer a mirror that stores individual files over one
+  that stores archives — HF `CVML-TueAI/HMDB51` cut a 2.1 GB rar-of-rars download to a
+  292 MB per-class fetch with no extraction tooling at all.
+
 - **2026-07-31 — Paraphrased WebFetch summaries hid the wrong filename.** Planned
   URFD fall-windowing against `fall-XX-data.csv` per sequence, described (from a
   fetched summary) as holding −1/0/1 pose labels. Actually downloading it showed

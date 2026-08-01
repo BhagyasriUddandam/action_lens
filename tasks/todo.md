@@ -52,9 +52,26 @@ Claude updates this as we go. Checkpoints = always-sendable states.
         alignment by hand.
   - **Not using `torchvision.datasets.HMDB51`:** needs exact split-file layout, no
     auto-download, fold logic fights the 40-per-class cap. Glob class folders instead.
-  - [ ] **User action:** download HMDB51 (~2GB Google Drive; rar-in-rar, needs
-        `unrar`/`7z` — verify availability on Explorer; check source page if it
-        prompts for a password)
+  - [x] `scripts/fetch_hmdb51.sh` — NO manual download needed after all.
+        **Both official sources are DEAD (verified 2026-07-31):** the Brown URL
+        `serre-lab.clps.brown.edu/wp-content/uploads/.../hmdb51_org.rar` 301s to the
+        new GitHub-Pages homepage and 404s on the new domain (site migrated off
+        WordPress) — this is NOT a user-agent block, browser UA/referer/-L all fail
+        identically. The Google Drive mirror on the current lab page also 404s.
+        **Source used:** HF `CVML-TueAI/HMDB51` — complete mirror (6766 clips, 51
+        classes) storing INDIVIDUAL .avi under `hmdb51_org/{class}/`, ungated.
+        So we fetch only our 4 classes (~292 MB / 980 clips) and need no unrar at
+        all — note `unrar`/`7z` are NOT installed on this Mac anyway.
+        Fallback `--method rar`: HF `Serrelab/hmdb51` (Brown's own account, the
+        authoritative 2.1 GB rar-of-rars, confirmed live) — needs unrar, insurance only.
+        Two download paths, both tested: `huggingface_hub.snapshot_download`
+        (primary; copies out of cache so no symlinks leak downstream) and a plain
+        curl loop (used when huggingface_hub is missing, e.g. bare env on Explorer).
+        Verified: fall_floor 136/136 via hf path in 13s; curl fallback exercised with
+        huggingface_hub forced unimportable, restored 3 deleted files, skipped 133;
+        all 136 confirmed real AVI, 0 symlinks, 0 truncated.
+        **Note for data_prep:** clip resolution VARIES (320x240, 416x240, 592x240
+        seen) — the resize step is required, not optional.
   - [ ] **User action:** accept URFD CC BY-NC-SA 4.0 (non-commercial academic) —
         ACCEPTED 2026-07-31; must cite Kwolek & Kepski (2014) in README + FINDINGS
   - [ ] Verify: labels.csv has 160 rows, 40/class, both sources present in `falling`
