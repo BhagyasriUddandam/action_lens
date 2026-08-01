@@ -34,3 +34,4 @@ slurm-*.out
 .DS_Store
 .vscode/
 .idea/
+.claude/
