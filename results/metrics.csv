@@ -1,0 +1,9 @@
+class,approach,accuracy,precision,recall,f1,n
+walking,baseline,0.75,0.7742,0.75,0.7619,32
+walking,vlm,0.875,0.875,0.875,0.875,32
+sitting,baseline,0.4062,0.5652,0.4062,0.4727,32
+sitting,vlm,0.9375,1.0,0.9375,0.9677,32
+standing,baseline,0.375,0.3636,0.375,0.3692,32
+standing,vlm,0.875,0.8485,0.875,0.8615,32
+falling,baseline,0.9062,0.7073,0.9062,0.7945,32
+falling,vlm,1.0,0.9697,1.0,0.9846,32

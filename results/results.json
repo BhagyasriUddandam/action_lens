@@ -1,0 +1,279 @@
+{
+  "dataset": {
+    "classes": [
+      "walking",
+      "sitting",
+      "standing",
+      "falling"
+    ],
+    "n_eval": 128,
+    "n_calib": 32,
+    "falling_sources": {
+      "urfd": 20,
+      "hmdb51": 12
+    }
+  },
+  "approaches": {
+    "baseline": {
+      "name": "Pretrained action-recognition backbone (frozen) + linear probe",
+      "model": "mvit_v2_s",
+      "overall_accuracy": 0.6094,
+      "per_class": {
+        "walking": {
+          "accuracy": 0.75,
+          "precision": 0.7742,
+          "recall": 0.75,
+          "f1": 0.7619,
+          "n": 32
+        },
+        "sitting": {
+          "accuracy": 0.4062,
+          "precision": 0.5652,
+          "recall": 0.4062,
+          "f1": 0.4727,
+          "n": 32
+        },
+        "standing": {
+          "accuracy": 0.375,
+          "precision": 0.3636,
+          "recall": 0.375,
+          "f1": 0.3692,
+          "n": 32
+        },
+        "falling": {
+          "accuracy": 0.9062,
+          "precision": 0.7073,
+          "recall": 0.9062,
+          "f1": 0.7945,
+          "n": 32
+        }
+      },
+      "confusion_matrix": {
+        "labels": [
+          "walking",
+          "sitting",
+          "standing",
+          "falling"
+        ],
+        "matrix": [
+          [
+            24,
+            1,
+            6,
+            1
+          ],
+          [
+            1,
+            13,
+            14,
+            4
+          ],
+          [
+            5,
+            8,
+            12,
+            7
+          ],
+          [
+            1,
+            1,
+            1,
+            29
+          ]
+        ]
+      },
+      "falling_by_source": {
+        "hmdb51": {
+          "accuracy": 0.75,
+          "n": 12
+        },
+        "urfd": {
+          "accuracy": 1.0,
+          "n": 20
+        }
+      },
+      "latency_ms_per_clip": 319.5,
+      "cost_note": "Runs on owned GPU compute -- no per-call API cost to report."
+    },
+    "vlm": {
+      "name": "claude-opus-5 (vision-language model)",
+      "model": "claude-opus-5",
+      "overall_accuracy": 0.9219,
+      "per_class": {
+        "walking": {
+          "accuracy": 0.875,
+          "precision": 0.875,
+          "recall": 0.875,
+          "f1": 0.875,
+          "n": 32
+        },
+        "sitting": {
+          "accuracy": 0.9375,
+          "precision": 1.0,
+          "recall": 0.9375,
+          "f1": 0.9677,
+          "n": 32
+        },
+        "standing": {
+          "accuracy": 0.875,
+          "precision": 0.8485,
+          "recall": 0.875,
+          "f1": 0.8615,
+          "n": 32
+        },
+        "falling": {
+          "accuracy": 1.0,
+          "precision": 0.9697,
+          "recall": 1.0,
+          "f1": 0.9846,
+          "n": 32
+        }
+      },
+      "confusion_matrix": {
+        "labels": [
+          "walking",
+          "sitting",
+          "standing",
+          "falling"
+        ],
+        "matrix": [
+          [
+            28,
+            0,
+            4,
+            0
+          ],
+          [
+            1,
+            30,
+            1,
+            0
+          ],
+          [
+            3,
+            0,
+            28,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            32
+          ]
+        ]
+      },
+      "falling_by_source": {
+        "hmdb51": {
+          "accuracy": 1.0,
+          "n": 12
+        },
+        "urfd": {
+          "accuracy": 1.0,
+          "n": 20
+        }
+      },
+      "latency_ms_per_clip": 4416.4,
+      "cost_per_1k_clips_usd": 9.57
+    }
+  },
+  "comparison": {
+    "per_class_accuracy_gap": {
+      "walking": 0.125,
+      "sitting": 0.5313,
+      "standing": 0.5,
+      "falling": 0.0938
+    },
+    "largest_gap_class": "sitting",
+    "sit_stand": {
+      "baseline_sitting_acc": 0.4062,
+      "baseline_standing_acc": 0.375,
+      "vlm_sitting_acc": 0.9375,
+      "vlm_standing_acc": 0.875,
+      "vlm_separates_sit_stand": true
+    }
+  },
+  "failure_cases": [
+    {
+      "clip_id": "hmdb51_20060723sfjfffightcoldplay_fall_floor_f_cm_np1_fr_med_0",
+      "label": "falling",
+      "source": "hmdb51",
+      "baseline_pred": "standing",
+      "vlm_pred": "falling",
+      "vlm_evidence": "Man walking upright in first frames abruptly drops, ending sprawled face-down on the pavement with arms bracing.",
+      "bucket": "vlm_correct_baseline_wrong"
+    },
+    {
+      "clip_id": "hmdb51_Finding_Forrester_3_fall_floor_f_cm_np2_ri_med_1",
+      "label": "falling",
+      "source": "hmdb51",
+      "baseline_pred": "walking",
+      "vlm_pred": "falling",
+      "vlm_evidence": "Players upright driving with the ball collide and abruptly sprawl onto the court floor, ball bouncing free, ending lying flat.",
+      "bucket": "vlm_correct_baseline_wrong"
+    },
+    {
+      "clip_id": "hmdb51_LONGESTYARD_fall_floor_h_nm_np1_fr_med_5",
+      "label": "falling",
+      "source": "hmdb51",
+      "baseline_pred": "sitting",
+      "vlm_pred": "falling",
+      "vlm_evidence": "Large object/person topples uncontrolled, tipping over and crashing down in dust toward the ground across the sequence.confidence moderate.} ends sprawled on ground.} ]",
+      "bucket": "vlm_correct_baseline_wrong"
+    },
+    {
+      "clip_id": "hmdb51_TheBoondockSaints_sit_u_cm_np1_fr_med_29",
+      "label": "sitting",
+      "source": "hmdb51",
+      "baseline_pred": "standing",
+      "vlm_pred": "walking",
+      "vlm_evidence": "The standing man moves rightward across the frame toward the seated man, torso upright throughout with no vertical transition.",
+      "bucket": "both_wrong"
+    },
+    {
+      "clip_id": "hmdb51_BLACK_HAWK_DOWN_stand_u_nm_np1_le_med_11",
+      "label": "standing",
+      "source": "hmdb51",
+      "baseline_pred": "walking",
+      "vlm_pred": "falling",
+      "vlm_evidence": "Figure initially upright/passing in foreground gives way to a soldier ending prone on the ground, an abrupt drop rather than a controlled seat.",
+      "bucket": "both_wrong"
+    },
+    {
+      "clip_id": "hmdb51_TheBoondockSaints_stand_u_nm_np1_fr_med_111",
+      "label": "standing",
+      "source": "hmdb51",
+      "baseline_pred": "walking",
+      "vlm_pred": "walking",
+      "vlm_evidence": "Man moves forward toward the camera from the house, upright throughout, growing larger in frame with no vertical descent or rise.",
+      "bucket": "both_wrong"
+    },
+    {
+      "clip_id": "hmdb51_TheBoondockSaints_sit_f_cm_np1_ri_med_42",
+      "label": "sitting",
+      "source": "hmdb51",
+      "baseline_pred": "sitting",
+      "vlm_pred": "standing",
+      "vlm_evidence": "Person starts lying/slumped low on bunk and progressively rises to an upright seated/standing posture by the final frames.",
+      "bucket": "baseline_correct_vlm_wrong"
+    },
+    {
+      "clip_id": "hmdb51_AmericanGangster_stand_f_nm_np1_le_med_33",
+      "label": "standing",
+      "source": "hmdb51",
+      "baseline_pred": "standing",
+      "vlm_pred": "walking",
+      "vlm_evidence": "The standing person on the right shifts position across frames, moving away from the table toward the background, torso upright throughout.",
+      "bucket": "baseline_correct_vlm_wrong"
+    },
+    {
+      "clip_id": "hmdb51_TheBoondockSaints_stand_f_cm_np1_fr_med_112",
+      "label": "standing",
+      "source": "hmdb51",
+      "baseline_pred": "standing",
+      "vlm_pred": "walking",
+      "vlm_evidence": "Torso stays upright while the body shifts laterally across the frame with swinging arms and moving background foliage, indicating travel on foot.",
+      "bucket": "baseline_correct_vlm_wrong"
+    }
+  ]
+}
