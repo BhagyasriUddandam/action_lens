@@ -21,6 +21,7 @@ data/frames/*
 # --- generated results: keep the small files, ignore the heavy ones ---
 results/plots/*.png
 !results/plots/.gitkeep
+results/*.npz           # cached backbone embeddings: regenerable, ~450KB each
 # NOTE: results/metrics.csv and results/results.json ARE committed —
 # the dashboard reads results.json and the repo should be viewable without a rerun.
 
