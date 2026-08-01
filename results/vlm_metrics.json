@@ -1,0 +1,96 @@
+{
+  "overall_accuracy": 0.9219,
+  "per_class": {
+    "walking": {
+      "accuracy": 0.875,
+      "precision": 0.875,
+      "recall": 0.875,
+      "f1": 0.875,
+      "n": 32
+    },
+    "sitting": {
+      "accuracy": 0.9375,
+      "precision": 1.0,
+      "recall": 0.9375,
+      "f1": 0.9677,
+      "n": 32
+    },
+    "standing": {
+      "accuracy": 0.875,
+      "precision": 0.8485,
+      "recall": 0.875,
+      "f1": 0.8615,
+      "n": 32
+    },
+    "falling": {
+      "accuracy": 1.0,
+      "precision": 0.9697,
+      "recall": 1.0,
+      "f1": 0.9846,
+      "n": 32
+    }
+  },
+  "falling_by_source": {
+    "hmdb51": {
+      "accuracy": 1.0,
+      "n": 12
+    },
+    "urfd": {
+      "accuracy": 1.0,
+      "n": 20
+    }
+  },
+  "confusion_matrix": {
+    "labels": [
+      "walking",
+      "sitting",
+      "standing",
+      "falling"
+    ],
+    "matrix": [
+      [
+        28,
+        0,
+        4,
+        0
+      ],
+      [
+        1,
+        30,
+        1,
+        0
+      ],
+      [
+        3,
+        0,
+        28,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        32
+      ]
+    ]
+  },
+  "n_scored": 128,
+  "n_failed": 0,
+  "cost": {
+    "total_usd": 1.2248,
+    "per_clip_usd": 0.00957,
+    "per_1k_clips_usd": 9.57,
+    "input_tokens": 185472,
+    "output_tokens": 7992,
+    "cache_read_tokens": 139128,
+    "cache_write_tokens": 4488,
+    "latency_mean_ms": 4416.4,
+    "latency_median_ms": 4208.4,
+    "latency_p90_ms": 5220.7
+  },
+  "model": "claude-opus-5",
+  "frames_per_clip": 8,
+  "effort": "low",
+  "thinking": "adaptive",
+  "split": "eval"
+}
