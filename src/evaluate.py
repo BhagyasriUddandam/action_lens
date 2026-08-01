@@ -27,6 +27,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import re
 import sys
 from pathlib import Path
 
@@ -103,7 +104,9 @@ def falling_by_source(df: pd.DataFrame) -> dict:
 # --- comparison ----------------------------------------------------------------
 
 
-def build_comparison(base: pd.DataFrame, vlm: pd.DataFrame, labels: tuple[str, ...]) -> dict:
+def build_comparison(
+    base: pd.DataFrame, vlm: pd.DataFrame, labels: tuple[str, ...], failures: pd.DataFrame
+) -> dict:
     base_pc = per_class_metrics(base, labels)
     vlm_pc = per_class_metrics(vlm, labels)
 
@@ -124,10 +127,21 @@ def build_comparison(base: pd.DataFrame, vlm: pd.DataFrame, labels: tuple[str, .
         ),
     }
 
+    # Full bucket counts, not just the curated examples in failure_cases -- the
+    # dashboard's gallery headings ("VLM corrected N of M mistakes") need the
+    # real totals, computed here rather than read off a log line by a human.
+    bucket_counts = failures.bucket.value_counts().to_dict()
+
     return {
         "per_class_accuracy_gap": gap,
         "largest_gap_class": largest_gap_class,
         "sit_stand": sit_stand_gap,
+        "failure_bucket_counts": {
+            "vlm_correct_baseline_wrong": int(bucket_counts.get("vlm_correct_baseline_wrong", 0)),
+            "baseline_correct_vlm_wrong": int(bucket_counts.get("baseline_correct_vlm_wrong", 0)),
+            "both_wrong": int(bucket_counts.get("both_wrong", 0)),
+        },
+        "n_failures_total": int(len(failures)),
     }
 
 
@@ -243,6 +257,29 @@ def plot_cost(vlm_cost_per_1k: float, out: Path) -> None:
 # --- results.json ------------------------------------------------------------
 
 
+_MID_SENTENCE_GLUE = re.compile(r"\.[a-z]")  # period immediately followed by
+# lowercase, no space -- a sentence boundary with no gap, the signature of
+# appended trailing text rather than a deliberate abbreviation.
+
+
+def has_clean_evidence(text) -> bool:
+    """True unless the VLM's evidence field looks truncated or malformed.
+
+    Rare (2/128 eval predictions in practice, verified by scanning the full
+    set): the model occasionally runs on past its evidence field near the
+    length boundary and appends a stray fragment -- brace/bracket characters,
+    or a second clause glued on with no space after the period. Confirmed
+    this never touches `pred`/`confidence` (checked separately), so it does
+    not affect any reported accuracy number -- only curation (which few of
+    many examples to show) is affected here.
+    """
+    if not isinstance(text, str) or not text:
+        return False
+    if any(c in text for c in "{}[]"):
+        return False
+    return not _MID_SENTENCE_GLUE.search(text)
+
+
 def build_results_json(
     base: pd.DataFrame, vlm: pd.DataFrame, base_metrics: dict, vlm_metrics: dict,
     labels: tuple[str, ...], comparison: dict, failures: pd.DataFrame,
@@ -255,7 +292,11 @@ def build_results_json(
     # is in failure_cases.csv for FINDINGS.md.
     curated = []
     for bucket in ("vlm_correct_baseline_wrong", "both_wrong", "baseline_correct_vlm_wrong"):
-        sub = failures[failures.bucket == bucket].head(3)
+        pool = failures[failures.bucket == bucket]
+        clean = pool[pool.evidence.apply(has_clean_evidence)]
+        # Prefer clean examples; only fall back to a malformed one if a
+        # bucket has fewer than 3 clean candidates.
+        sub = pd.concat([clean, pool[~pool.index.isin(clean.index)]]).head(3)
         for r in sub.itertuples():
             curated.append({
                 "clip_id": r.clip_id, "label": r.label, "source": r.source,
@@ -334,8 +375,8 @@ def main(argv: list[str] | None = None) -> int:
     labels = LABELS
     base_pc = per_class_metrics(base, labels)
     vlm_pc = per_class_metrics(vlm, labels)
-    comparison = build_comparison(base, vlm, labels)
     failures = build_failure_cases(base, vlm)
+    comparison = build_comparison(base, vlm, labels, failures)
 
     log.info("=" * 62)
     log.info("BASELINE vs VLM  (n=%d eval clips)", len(common))

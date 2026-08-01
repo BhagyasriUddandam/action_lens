@@ -182,16 +182,127 @@ Claude updates this as we go. Checkpoints = always-sendable states.
         `ant auth login`), then run `--limit 4`, then `--split calib`, then
         `--split eval`
   - [ ] Report per-class accuracy and whether the VLM separates sit from stand
-- [ ] evaluate.py: baseline vs VLM — accuracy, per-class, failure cases, latency/cost table + plots
-- [ ] Save results/metrics.csv and results/results.json
+- [x] evaluate.py: baseline vs VLM — accuracy, per-class, failure cases, latency/cost table + plots
+  - **WRITTEN AND VERIFIED 2026-07-31, NOT YET RUN FOR REAL** — this machine has no
+    `vlm_predictions.csv`/`vlm_metrics.json` (the VLM run happened elsewhere, likely
+    Explorer). Verified structurally with a SYNTHETIC vlm_predictions.csv matching
+    the real schema (deleted immediately after — never committed, never treated as
+    a real result). Confirmed: baseline-side numbers in results.json are computed
+    fresh from the REAL baseline_predictions.csv (matched the previously-verified
+    75/40.6/37.5/90.6% per class, 60.9% overall) — only the synthetic VLM side was
+    fake. `sit_stand.vlm_separates_sit_stand` boolean, `largest_gap_class`, and
+    failure-case bucketing all computed correctly from data, none hardcoded.
+  - Filters both prediction files to `split=="eval"` defensively regardless of how
+    each was generated; takes the clip_id intersection and warns on mismatch rather
+    than silently dropping or crashing.
+  - Outputs: `results/metrics.csv` (wide comparison table), `results/failure_cases.csv`
+    (full disagreement list for FINDINGS.md), `results/plots/*.png` (per-class bars,
+    side-by-side confusion matrices, latency, cost — using the project's validated
+    categorical palette: blue #2a78d6 baseline / orange #eb6834 VLM), `results/results.json`
+    (dashboard's ONLY data source).
+  - **Baseline cost honesty:** no fabricated "$0" baseline cost bar — baseline runs
+    on owned GPU compute, so `cost_note` states that instead of a false per-clip
+    dollar comparison against the VLM's metered API cost.
+  - [ ] **User action:** get the real `results/vlm_predictions.csv` +
+        `results/vlm_metrics.json` onto this machine (or run `evaluate.py` wherever
+        vlm_benchmark.py actually ran), then run `python src/evaluate.py` for real
 - [ ] Write FINDINGS.md (yourself): when to use which approach
 
 ## CHECKPOINT C — Dashboard (CEO wow)
-- [ ] Scaffold React+Vite app with bun, Tailwind, GSAP (current Node LTS)
-- [ ] Components (SOLID): ClipViewer, PredictionCompare, MetricsCharts, InsightBanner
-- [ ] Load results.json; animate charts with GSAP/Animate UI
-- [ ] Verify it renders and looks polished
-- [ ] Record 2–3 min demo video for the CEO email
+- [x] Scaffold React+Vite app with bun, Tailwind, GSAP (current Node LTS)
+  - React 19.2 + Vite 8.2 (via `bun create vite --template react`), Tailwind v4
+    (the current `@tailwindcss/vite` plugin approach, no tailwind.config.js needed),
+    GSAP 3.15, bun 1.3.10. Node v24 confirmed current LTS.
+  - **Deviated from a literal reading of INSTRUCTIONS.md's "GSAP + Animate UI":**
+    used GSAP alone. Animate UI is a shadcn-style copy-paste library built on
+    Motion (Framer Motion), not GSAP — pulling both in means two animation
+    engines doing overlapping jobs, which fails "simplicity first" for a single
+    scoped page. GSAP alone (scroll-triggered reveals, count-up numbers, staggered
+    bar-fill) delivers the "smooth, premium feel" ask. Flagged for the user;
+    can add real Animate UI components later if they specifically want that
+    library's look.
+- [x] Components (SOLID, one job each): Hero, InsightBanner (the sit/stand
+      headline), SectionHeading, AccuracyChart, ConfusionMatrixGrid/Pair,
+      LatencyCostPanel, FailureCard/Gallery, StatTile, Footer
+  - Charts are custom-built (div-based), not a charting library — kept full
+    control over the project's validated palette and dataviz-skill mark specs
+    (thin bars, rounded ends, legend for 2+ series, sequential ramp for the
+    confusion matrix) rather than fighting a library's defaults.
+  - `dashboard/scripts/sync-data.mjs` (bun run sync, wired into dev/build)
+    copies `results/results.json` into `public/` and exports first+last-frame
+    thumbnails for the curated failure cases into `public/clips/` — frame
+    images are gitignored (2560 files), so this is a deliberate small export,
+    not full clip playback. Documents the pipeline/dashboard boundary as one
+    command.
+- [x] Load results.json; animate charts with GSAP
+  - Count-up numbers (StatTile), scroll-triggered reveals (useInView +
+    IntersectionObserver), staggered bar-fill (AccuracyChart), hero entrance
+    timeline.
+- [x] Verify it renders and looks polished
+  - **Real browser verification**, not just HTTP checks: installed Playwright
+    + Chromium (temporarily — removed after), drove the actual dev server,
+    screenshotted every section, confirmed zero console errors.
+  - **Two real bugs found and fixed during this pass:**
+    1. First screenshot attempt (800ms wait) showed the Hero's two headline
+       numbers as blank — traced to the GSAP entrance timeline taking ~1.4s
+       total; the verification script's wait was too short, not a product bug.
+       Confirmed via DOM inspection (`$$eval`) that the correct values were
+       present in the DOM the whole time.
+    2. A `<>` fragment shorthand with a `key` prop in ConfusionMatrixGrid
+       (React silently rejects keys on shorthand fragments) — fixed with an
+       explicit `Fragment` import before it ever hit the browser.
+  - **Data-quality issue found in the VLM's own output, not the dashboard:**
+    2 of 128 eval predictions' `evidence` text (free-text field only —
+    `pred`/`confidence` unaffected, verified) had the model running on past
+    the field boundary with a glued-on fragment (one with stray `{}`/`[]`,
+    one a mid-sentence non-space period). Did NOT rewrite or fabricate
+    cleaner text for real model output. Instead improved evaluate.py's
+    curation (already picking 3 of 45 examples) to prefer clean candidates
+    when enough exist — `has_clean_evidence()` in evaluate.py. Regenerated
+    results.json; all reported numbers unchanged, since neither anomaly
+    touched a scored field.
+  - Confirmed final render top-to-bottom: Hero (60.9%/92.2%, real counted-up
+    numbers), InsightBanner (real +53pt/+50pt sit/stand story), AccuracyChart
+    (all 4 classes, correct per-class %), ConfusionMatrixPair (matches
+    results.json's matrices exactly), LatencyCostPanel (320ms/4416ms/$9.57,
+    honest baseline cost_note instead of a fabricated $0), FailureGallery
+    (45/5/5 buckets, real thumbnails, clean evidence quotes), Footer (real
+    dataset stats).
+- [ ] Record 2–3 min demo video for the CEO email (user's task)
+- [x] Restyled to match C10 Labs' aesthetic (2026-08-01)
+  - **Looked at the real site first** instead of guessing "bold sans-serif" from
+    the user's own unfilled placeholder — screenshotted c10labs.com with
+    Playwright, read computed styles (font-family, sizes, letter-spacing,
+    colors). Real tokens: headings in Space Grotesk (600 weight, -2.4px tracking
+    at 96px), body in Inter, `#fafafa`/`#141414` base, crimson `#e11d48` used
+    sparingly (one CTA, one highlighted word per heading, one standout stat).
+  - **Resolved the "one accent color" vs "charts need 2 series colors" tension**
+    by copying their own convention: their stat row highlights exactly one
+    number in crimson and leaves the rest black. Applied directly: baseline =
+    ink/near-black (neutral), VLM = crimson (the standout finding). This isn't
+    just on-brand — ink/crimson is a stronger accessibility pairing than the
+    prior blue/orange (lightness contrast, not just hue, so it survives full
+    monochromacy).
+  - Achieved almost entirely via **two token files** (`lib/theme.js`,
+    `index.css`) — since every component already referenced colors through
+    `COLORS.*` / CSS vars rather than hardcoded hex, the full recolor needed
+    zero logic changes, exactly matching "don't touch data or logic."
+  - Confusion-matrix heatmap ramp switched from blue to grayscale — kept
+    quiet/restrained on purpose, reserving crimson for the accent role only.
+  - Small structural touches (all visual, no logic): eyebrow-with-rule flourish
+    (their signature small detail) on Hero/SectionHeading; two-tone heading in
+    InsightBanner (color the word "VLM" crimson, matching their pattern of
+    coloring one key word per heading); FailureCard switched from
+    white+border+shadow to flat gray card (`bg-[var(--color-card)]`, no
+    border) matching their feature-card treatment; correct predictions now
+    render as plain text rather than a green pill (more restrained — only the
+    disagreement gets flagged); thin full-width dividers between sections
+    (`border-black/[0.06]`) replacing pure padding-based separation; bumped
+    section padding for more generous whitespace.
+  - **Verified with the same real-browser method as the original build**:
+    Playwright + Chromium screenshots (not HTTP checks), zero console errors,
+    confirmed `bun run lint` and `bun run build` both clean. Playwright removed
+    again afterward — not a runtime dependency.
 
 ## Review section
 

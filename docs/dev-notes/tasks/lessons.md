@@ -30,6 +30,62 @@ Format: **Date — Mistake — Rule to prevent it.**
   page. Applies to modality too — "RGB dataset" may mean depth-primary (URFD) or
   still images rather than clips (the Roboflow URFD mirrors).
 
+- **2026-08-01 — When asked to match a real reference, look at the reference.**
+  User's restyle request named a specific site (c10labs.com) but left a
+  placeholder ("[Add what you observed...]") unfilled — easy to fill in from
+  imagination ("probably a bold sans-serif"). Instead screenshotted the real
+  site and read its computed styles (exact font, size, tracking, hex colors).
+  Got concrete, correct tokens (Space Grotesk, not a guessed "bold sans"; their
+  own single-highlighted-stat convention, which directly solved a real design
+  problem — how to keep "one accent color" while still needing 2 distinguishable
+  chart series). **Rule:** when a user references a specific external design,
+  product, or document as the target, fetch/screenshot it rather than filling
+  gaps from training-data priors — especially when the user's own prompt shows
+  they didn't have the specifics on hand either.
+
+- **2026-08-01 — "Only touch styling" is easiest to honor when styling was already centralized.**
+  The full recolor (blue/orange -> ink/crimson) touched exactly 2 files
+  (`theme.js`, `index.css`) because every component already referenced colors
+  via `COLORS.*` / CSS custom properties, never hardcoded hex. This paid off
+  directly on a "restyle only, don't touch logic" request — validates keeping a
+  single color/token source of truth from the start (done originally per the
+  dataviz skill's palette-as-parameters approach), not just as good practice in
+  the abstract.
+
+- **2026-08-01 — "Show it renders" means drive a real browser, not curl the HTML.**
+  `curl localhost:5173` returning 200 proves the server started, not that the page
+  is correct — it can't see JS errors, animation timing bugs, or broken data
+  rendering. Installed Playwright + a real headless Chromium, took actual
+  screenshots, and caught two real problems that HTTP checks would have missed:
+  a GSAP entrance-timeline wait that was too short in my own verification script
+  (numbers were in the DOM the whole time, just not yet visible), and a `<>`
+  fragment-with-key bug that only a live render would surface. **Rule:** for any
+  UI verification claim ("it renders", "it looks polished"), drive a real browser
+  and look at the pixels — an HTTP status code is not a rendering proof.
+
+- **2026-08-01 — Found a data-quality issue in upstream output; fixed curation, not the data.**
+  2 of 128 VLM predictions had garbled trailing text in the free-text `evidence`
+  field (the model ran on past the field boundary). The classification itself
+  (`pred`/`confidence`) was unaffected — verified this explicitly before deciding
+  what to do. Did not rewrite the model's actual output to look cleaner (that
+  would misrepresent real system behavior); instead improved the *curation* logic
+  that was already picking a few of many examples, so it prefers clean ones when
+  clean alternatives exist. **Rule:** when found data looks wrong, first establish
+  exactly which fields are affected and how widely (grep the full set, don't
+  eyeball one instance) before deciding whether the fix belongs in the data,
+  the pipeline, or just downstream selection/display.
+
+- **2026-07-31 — "Checkpoint complete" from the user still needs the artifact checked.**
+  User reported final VLM eval numbers and called Checkpoint B done. Checking disk
+  found `results/results.json` didn't exist, `evaluate.py` was never written, and no
+  VLM output files existed anywhere on this machine — the run happened elsewhere
+  (Explorer). The numbers were very likely real, but the file the NEXT phase
+  (dashboard) is contractually gated on wasn't. **Rule:** when a user reports a
+  checkpoint done and the next phase depends on a specific artifact, verify the
+  artifact exists before starting the next phase — regardless of how credible the
+  reported numbers are. This is the same "verify before done" rule applied to a
+  handoff between checkpoints, not just to my own work.
+
 - **2026-07-31 — Metered API work needs a resume cache before the first real call.**
   vlm_benchmark.py spends real money per clip, so a crash 140 clips into a 160-clip
   run would re-pay for all of it. Built an append-only JSONL flushed after every
