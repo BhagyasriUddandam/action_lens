@@ -22,9 +22,10 @@ export function Hero({ baselineAccuracy, vlmAccuracy }) {
     <section ref={rootRef} className="mx-auto max-w-4xl px-6 pt-32 pb-20 text-center">
       <p
         data-hero-eyebrow
-        className="mb-4 flex items-center justify-center gap-3 text-sm font-semibold tracking-wide text-[var(--color-ink-muted)] uppercase"
+        className="mb-4 flex items-center justify-center gap-2 text-sm font-semibold tracking-wide text-[var(--color-ink-muted)] uppercase"
       >
         <span className="h-px w-6 bg-[var(--color-ink-muted)]/40" />
+        <img src="/lotus.svg" alt="" className="h-4 w-4 opacity-70" />
         ActionLens
       </p>
       <h1 data-hero-title className="text-4xl font-semibold text-[var(--color-ink)] sm:text-5xl">
