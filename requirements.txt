@@ -1,0 +1,35 @@
+# ActionLens — Python dependencies
+# Target: Python 3.11
+#
+# IMPORTANT (HPC): do NOT install torch from this file on Explorer.
+# Install it first against the cluster's CUDA version, then install the rest:
+#
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+#   pip install -r requirements.txt
+#
+# On the Mac (M4, for light local testing only) plain `pip install torch torchvision`
+# gives you the MPS build. Heavy runs belong on HPC.
+
+# --- core ML ---
+torch>=2.2
+torchvision>=0.17
+
+# --- video / CV ---
+opencv-python-headless>=4.9      # headless: no GUI libs on compute nodes
+mediapipe>=0.10.14               # pose extraction
+av>=12.0                         # video decoding backend for torchvision.io
+
+# --- data & plots ---
+numpy>=1.26,<2.0                 # <2.0: mediapipe wheels still link against numpy 1.x
+pandas>=2.2
+matplotlib>=3.8
+scikit-learn>=1.4                # confusion matrix / classification report
+
+# --- utilities ---
+tqdm>=4.66
+pyyaml>=6.0
+
+# --- Checkpoint B only (VLM benchmark) ---
+# Listed now so the HPC env is built once, not twice.
+anthropic>=0.40
+python-dotenv>=1.0               # loads API key from .env, never hardcode it

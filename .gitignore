@@ -1,0 +1,35 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.Python
+
+# --- environments ---
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+
+# --- data: never commit video ---
+data/raw/*
+data/clips/*
+data/frames/*
+!data/**/.gitkeep
+
+# --- generated results: keep the small files, ignore the heavy ones ---
+results/plots/*.png
+!results/plots/.gitkeep
+# NOTE: results/metrics.csv and results/results.json ARE committed —
+# the dashboard reads results.json and the repo should be viewable without a rerun.
+
+# --- SLURM ---
+logs/*
+!logs/.gitkeep
+slurm-*.out
+
+# --- macOS / editors ---
+.DS_Store
+.vscode/
+.idea/
